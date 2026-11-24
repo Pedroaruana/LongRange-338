@@ -1,0 +1,29 @@
+@import "@fontsource/big-shoulders-stencil-display/700";
+@import "@fontsource/big-shoulders-stencil-display/900";
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Inter Variable", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono Variable", ui-monospace, monospace;
+  --font-display: "Big Shoulders Stencil Display", "Inter Variable", sans-serif;
+}
+
+html, body {
+  margin: 0;
+  background: #0b0a09;
+  overflow-x: hidden;
+}
+
+/* o scroll so serve de trilho: a cena fica fixa e reage ao progresso */
+.track {
+  height: 1600vh;
+}
+
+.stage-in {
+  animation: stage-in 0.7s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes stage-in {
+  from { opacity: 0; transform: translateY(14px); filter: blur(4px); }
+  to { opacity: 1; transform: none; filter: none; }
+}
