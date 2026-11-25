@@ -15,6 +15,7 @@ import { Vegetation } from './world/Vegetation'
 import { Course } from './world/Course'
 import { Blast } from './world/Blast'
 import { Hud } from './Hud'
+import { TrainWorld } from './train/TrainWorld'
 import { telemetry } from './world/telemetry'
 
 // ?perf&no=a,b desliga partes da cena para medir quanto cada uma custa na compilacao
@@ -67,6 +68,7 @@ const App = () => {
             {has('bullet') && <Projectile />}
             {has('bullet') && <Blast />}
             {has('target') && <Target />}
+            {mode === 'train' && <TrainWorld />}
             {has('dust') && <Dust />}
             {has('fx') && <Effects />}
           </>
