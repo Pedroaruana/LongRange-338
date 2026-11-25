@@ -5,6 +5,7 @@ import {
   bulletWorld, sample, distanceAt
 } from './layout'
 import { telemetry } from './telemetry'
+import { heightAt, valleyX } from './height'
 import { perf } from '../perf'
 import { RANGE } from '../ballistics'
 
@@ -75,6 +76,49 @@ const chase = (s: number) => {
   look.copy(bp).addScaledVector(fwd, 0.03)
 }
 
+// ---------- tela inicial: voo rasante pelo canion, sem fim ----------
+const FLY_START = 4800
+const FLY_END = -4800
+const FLY_SPEED = 92
+const FLY_FADE = FLY_SPEED * 1.6
+const fly = { z: FLY_START, y: 0, roll: 0, t: 0, init: false }
+const flyLook = new THREE.Vector3()
+const flyLookSmooth = new THREE.Vector3()
+
+const homeFlight = (camera: THREE.Camera, pointer: { x: number; y: number }, dt: number) => {
+  fly.t += dt
+  fly.z -= FLY_SPEED * dt
+  if (fly.z < FLY_END) {
+    fly.z = FLY_START
+    fly.init = false
+  }
+  const { z, t } = fly
+  const x = valleyX(z) + Math.sin(t * 0.23) * 32
+  // olha a frente para subir antes dos morros
+  const ground = Math.max(heightAt(x, z), heightAt(x, z - 50), heightAt(x, z - 110))
+  const targetY = ground + 40 + Math.sin(t * 0.37) * 12
+  const lz = z - 240
+  if (!fly.init) {
+    fly.y = targetY
+    flyLookSmooth.set(valleyX(lz), heightAt(valleyX(lz), lz) + 18, lz)
+    fly.init = true
+  }
+  fly.y += (targetY - fly.y) * Math.min(1, dt * 2.2)
+  const lx = valleyX(lz) + pointer.x * 60
+  flyLook.set(lx, heightAt(lx, lz) + 18 + pointer.y * 30, lz)
+  flyLookSmooth.lerp(flyLook, Math.min(1, dt * 2.5))
+
+  camera.position.set(x, fly.y, z)
+  camera.lookAt(flyLookSmooth)
+  // inclina nas curvas como uma aeronave
+  const curve = valleyX(z - 160) - valleyX(z)
+  fly.roll += (-curve * 0.0016 - fly.roll) * Math.min(1, dt * 1.5)
+  camera.rotateZ(fly.roll)
+
+  telemetry.homeAlt = fly.y - heightAt(x, z)
+  telemetry.homeFade = Math.min(1, Math.max(0, 1 - (FLY_START - z) / FLY_FADE, 1 - (z - FLY_END) / FLY_FADE))
+}
+
 // ?cam=x,y,z,lx,ly,lz trava a camera num ponto relativo ao atirador (so para desenvolvimento)
 const debugCam = import.meta.env.DEV
   ? new URLSearchParams(location.search).get('cam')?.split(',').map(Number)
@@ -94,8 +138,15 @@ export const CameraRig = () => {
     }
     const dt = Math.min(dtRaw, 0.05)
 
-    // so o tiro de 2000 m move a camera por enquanto
-    if (telemetry.mode !== 'shot') return
+    if (telemetry.mode !== 'shot') {
+      const persp = camera as THREE.PerspectiveCamera
+      if (persp.fov !== BASE_FOV) {
+        persp.fov = BASE_FOV
+        persp.updateProjectionMatrix()
+      }
+      homeFlight(camera, pointer, dt)
+      return
+    }
 
     // scroll suavizado: a bala desacelera junto com o dedo
     const max = document.documentElement.scrollHeight - innerHeight

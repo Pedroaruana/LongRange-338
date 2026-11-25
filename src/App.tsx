@@ -1,4 +1,4 @@
-import { Suspense, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Shooter } from './world/Shooter'
 import { Terrain } from './world/Terrain'
@@ -17,43 +17,63 @@ import { Blast } from './world/Blast'
 import { Hud } from './Hud'
 import { telemetry } from './world/telemetry'
 
-// por enquanto o site e so o tiro de 2000 m: o scroll da pagina e o trilho da cena
-telemetry.mode = 'shot'
+// ?perf&no=a,b desliga partes da cena para medir quanto cada uma custa na compilacao
+const off = new URLSearchParams(location.search).get('no')?.split(',') ?? []
+const has = (k: string) => !off.includes(k)
 
 const App = () => {
+  // so o tiro de 2000 m usa o scroll; tela inicial e escola de tiro ficam numa tela so
+  const [mode, setMode] = useState<typeof telemetry.mode>('home')
   // o cenario vira estado do React so para a luz refazer o mapa de ambiente
   const [scenarioId, setScenarioId] = useState('desert')
+  // a cena pesada (terreno, vegetacao, shaders) so e montada depois que a pagina pinta a tela inicial,
+  // assim o logo e as opcoes aparecem na hora em vez de uma tela preta parada
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    let t = 0
+    const r = requestAnimationFrame(() => { t = window.setTimeout(() => setMounted(true), 30) })
+    return () => {
+      cancelAnimationFrame(r)
+      clearTimeout(t)
+    }
+  }, [])
 
   return (
   <>
-    <div className="track" />
+    <div className={mode === 'shot' ? 'track' : 'h-screen'} />
     <div className="fixed inset-0">
       <Canvas
         flat
-        shadows="soft"
+        shadows={has('shadow') ? 'soft' : false}
         dpr={[1, 1.5]}
         camera={{ fov: 40, near: 0.01, far: 12000 }}
         gl={{ antialias: false, powerPreference: 'high-performance', logarithmicDepthBuffer: true }}
       >
-        <CameraRig />
-        <Lights scenarioId={scenarioId} />
-        <Sky />
-        <Terrain />
-        <Vegetation />
-        <Course />
-        <Sniper />
-        <Suspense fallback={null}>
-          <Shooter />
-        </Suspense>
-        <Rifle />
-        <Projectile />
-        <Blast />
-        <Target />
-        <Dust />
-        <Effects />
+        {mounted && (
+          <>
+            <CameraRig />
+            <Lights scenarioId={scenarioId} />
+            <Sky />
+            {has('terrain') && <Terrain />}
+            {has('veg') && <Vegetation />}
+            {has('course') && <Course />}
+            {has('sniper') && <Sniper />}
+            {has('shooter') && (
+              <Suspense fallback={null}>
+                <Shooter />
+              </Suspense>
+            )}
+            {has('rifle') && <Rifle />}
+            {has('bullet') && <Projectile />}
+            {has('bullet') && <Blast />}
+            {has('target') && <Target />}
+            {has('dust') && <Dust />}
+            {has('fx') && <Effects />}
+          </>
+        )}
       </Canvas>
     </div>
-    <Hud onScenario={setScenarioId} />
+    <Hud mode={mode} onMode={setMode} onScenario={setScenarioId} />
   </>
   )
 }
