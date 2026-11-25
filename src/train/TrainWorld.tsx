@@ -193,7 +193,6 @@ export const TrainWorld = () => {
         return
       }
       const l = LESSONS[train.lesson]
-      if (train.mode === 'lessons' && l.kind !== 'shoot') return
       if (train.shot && !train.resolved) return
       if (train.mode === 'lessons' && l.shots && train.shots >= l.shots) return
       train.shot = fire(
@@ -218,6 +217,13 @@ export const TrainWorld = () => {
         return
       }
       if (!down) return
+      // licao de medir distancia: responde pelo teclado sem soltar o mouse (3 = 300 m ... 6 = 600 m)
+      const l = LESSONS[train.lesson]
+      const digit = /^Digit([3-6])$/.exec(e.code)
+      if (train.mode === 'lessons' && l.kind === 'range' && digit) {
+        train.answer = Number(digit[1]) * 100
+        return
+      }
       // um clique da torre na unidade da luneta, convertido para mrad
       const s = activeScope()
       const step = s.unit === 'moa' ? s.click * MOA : s.click

@@ -161,12 +161,12 @@ export const Hud = ({ mode, onMode, onScenario }: { mode: Mode; onMode: (m: Mode
 
       <div className={`absolute inset-0 bg-[#0b0a09] transition-opacity duration-700 ${curtain ? 'opacity-100' : 'opacity-0'}`} />
 
-      {/* idioma em qualquer tela */}
-      <div data-ui className="pointer-events-auto absolute left-1/2 top-[5vh] flex -translate-x-1/2 gap-6 font-mono text-[0.6rem] tracking-[0.35em] text-[#ece0cf]/55">
+      {/* idioma em qualquer tela; durante o tiro da escola ele fica na barra da propria escola */}
+      {!(mode === 'train' && train.phase === 'run') && <div data-ui className="pointer-events-auto absolute left-1/2 top-[5vh] flex -translate-x-1/2 gap-6 font-mono text-[0.6rem] tracking-[0.35em] text-[#ece0cf]/55">
         <button onClick={() => setLang(lang.current === 'pt' ? 'en' : 'pt')} className="cursor-pointer transition-colors hover:text-[#ffd2a6]">
           <span className={lang.current === 'pt' ? 'text-[#ffd2a6]' : ''}>PT</span> / <span className={lang.current === 'en' ? 'text-[#ffd2a6]' : ''}>EN</span>
         </button>
-      </div>
+      </div>}
 
     </div>
   )

@@ -8,10 +8,13 @@ import { ScopeView, ReticleThumb } from './Reticles'
 import { SCENARIOS, scenario } from '../world/scenarios'
 import { airDensity } from '../ballistics'
 import { n } from '../hud/stages'
-import { tr } from '../i18n'
+import { tr, lang, setLang } from '../i18n'
 
 // painel da escola de tiro: preparacao (modo, cenario, luneta), licoes guiadas e treino livre.
 // re-renderiza junto com o HUD (a cada 70 ms), lendo o estado mutavel do treino
+
+// a mira depende de mouse travado, roda e teclado: em tela de toque ou janela estreita nao da para jogar
+const canPlay = () => !matchMedia('(pointer: coarse)').matches && innerWidth >= 900
 
 const Btn = ({ children, onClick, primary, disabled }: { children: ReactNode; onClick: () => void; primary?: boolean; disabled?: boolean }) => (
   <button
@@ -133,6 +136,14 @@ const Setup = ({ onScenario, onExit }: { onScenario: (id: string) => void; onExi
         </div>
 
         <div className="mt-12">
+          {!canPlay() ? (
+            <div className="max-w-[30rem] border-l-2 border-[#e8a76b] pl-4 text-[0.78rem] leading-6 text-[#ece0cf]/80">
+              {tr(
+                'A escola de tiro usa mouse e teclado: a mira trava o mouse, a roda muda o aumento e o WASD gira a torre. Abra no computador, com a janela larga, para jogar.',
+                'The sniper school needs a mouse and keyboard: aiming locks the mouse, the wheel sets the power and WASD dials the turret. Open it on a computer, in a wide window, to play.'
+              )}
+            </div>
+          ) : (
           <Btn primary onClick={() => {
             // le o estado na hora do clique: o painel so redesenha a cada 70 ms
             train.phase = 'run'
@@ -141,6 +152,7 @@ const Setup = ({ onScenario, onExit }: { onScenario: (id: string) => void; onExi
           }}>
             {tr('COMEÇAR', 'START')}
           </Btn>
+          )}
         </div>
       </div>
     </div>
@@ -193,6 +205,7 @@ const LessonPanel = () => {
           <div className="mt-4 flex gap-5">
             {l.options!.map((d) => <Btn key={d} onClick={() => { train.answer = d }} primary={train.answer === d}>{d} M</Btn>)}
           </div>
+          <div className="mt-2 font-mono text-[0.6rem] tracking-[0.25em] text-[#ece0cf]/50">{tr('OU TECLE 3, 4, 5 OU 6 SEM SOLTAR A MIRA', 'OR PRESS 3, 4, 5 OR 6 WITHOUT LEAVING THE SCOPE')}</div>
           {train.answer !== null && (
             <div className="mt-3 text-[0.72rem] leading-5 text-[#ece0cf]/70">
               {train.answer === target.d
@@ -397,6 +410,7 @@ export const TrainHud = ({ onExit, onScenario }: { onExit: () => void; onScenari
       </div>
       <div className="absolute right-[4vw] top-[5vh] flex gap-6">
         {shot && train.resolved && !replaying && <Btn primary onClick={() => { train.replay = performance.now() / 1000 }}>{tr('REPLAY (V)', 'REPLAY (V)')}</Btn>}
+        <Btn onClick={() => setLang(lang.current === 'pt' ? 'en' : 'pt')}>{lang.current === 'pt' ? 'EN' : 'PT'}</Btn>
         <Btn onClick={() => { train.phase = 'setup' }}>{tr('PREPARAÇÃO', 'SETUP')}</Btn>
         <Btn onClick={onExit}>{tr('SAIR', 'EXIT')}</Btn>
       </div>
