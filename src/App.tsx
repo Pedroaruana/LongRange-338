@@ -1,37 +1,32 @@
-import { useState } from 'react'
-import * as THREE from 'three'
-import { Canvas, useFrame } from '@react-three/fiber'
+import { Suspense, useState } from 'react'
+import { Canvas } from '@react-three/fiber'
+import { Shooter } from './world/Shooter'
 import { Terrain } from './world/Terrain'
-import { Vegetation } from './world/Vegetation'
 import { Sky } from './world/Sky'
-import { Lights } from './world/Lights'
 import { Dust } from './world/Dust'
-import { Effects } from './world/Effects'
+import { Rifle } from './world/Rifle'
+import { Sniper } from './world/Sniper'
+import { Projectile } from './world/Projectile'
 import { Target } from './world/Target'
-import { TARGET, P_IMPACT } from './world/layout'
+import { CameraRig } from './world/CameraRig'
+import { Effects } from './world/Effects'
+import { Lights } from './world/Lights'
+import { Vegetation } from './world/Vegetation'
+import { Course } from './world/Course'
+import { Blast } from './world/Blast'
+import { Hud } from './Hud'
 import { telemetry } from './world/telemetry'
 
-// camera de perto no alvo de aco a 2000 m; o botao reproduz o impacto para conferir os efeitos
+// por enquanto o site e so o tiro de 2000 m: o scroll da pagina e o trilho da cena
 telemetry.mode = 'shot'
-const EYE = TARGET.clone().add(new THREE.Vector3(2.2, 0.4, 7))
-const hit = { start: -1 }
-
-const Eye = () => {
-  useFrame(({ camera, clock }) => {
-    const cam = camera as THREE.PerspectiveCamera
-    cam.position.copy(EYE)
-    cam.lookAt(TARGET)
-    // o alvo le o tempo desde o impacto em unidades de progresso do scroll
-    if (hit.start < 0 && telemetry.p > 0) hit.start = clock.elapsedTime
-    telemetry.p = hit.start < 0 ? 0 : P_IMPACT + (clock.elapsedTime - hit.start) * 0.05
-  })
-  return null
-}
 
 const App = () => {
-  const [shots, setShots] = useState(0)
+  // o cenario vira estado do React so para a luz refazer o mapa de ambiente
+  const [scenarioId, setScenarioId] = useState('desert')
 
   return (
+  <>
+    <div className="track" />
     <div className="fixed inset-0">
       <Canvas
         flat
@@ -40,29 +35,26 @@ const App = () => {
         camera={{ fov: 40, near: 0.01, far: 12000 }}
         gl={{ antialias: false, powerPreference: 'high-performance', logarithmicDepthBuffer: true }}
       >
-        <Eye />
-        <Lights scenarioId="desert" />
+        <CameraRig />
+        <Lights scenarioId={scenarioId} />
         <Sky />
         <Terrain />
         <Vegetation />
-        <Target key={shots} />
+        <Course />
+        <Sniper />
+        <Suspense fallback={null}>
+          <Shooter />
+        </Suspense>
+        <Rifle />
+        <Projectile />
+        <Blast />
+        <Target />
         <Dust />
         <Effects />
       </Canvas>
-      <div className="absolute left-[4vw] top-[5vh] font-mono text-[0.64rem] tracking-[0.3em] text-[#ece0cf]">
-        <div className="font-display text-2xl font-black tracking-[0.04em]">LONGRANGE</div>
-        <button
-          onClick={() => {
-            hit.start = -1
-            telemetry.p = P_IMPACT
-            setShots((s) => s + 1)
-          }}
-          className="mt-6 cursor-pointer border-b border-[#ece0cf]/30 pb-1 uppercase text-[#ece0cf]/75 transition-colors hover:text-[#ffd2a6]"
-        >
-          Impacto
-        </button>
-      </div>
     </div>
+    <Hud onScenario={setScenarioId} />
+  </>
   )
 }
 
