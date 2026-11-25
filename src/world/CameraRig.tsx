@@ -6,6 +6,7 @@ import {
 } from './layout'
 import { telemetry } from './telemetry'
 import { heightAt, valleyX } from './height'
+import { train } from '../train/lessons'
 import { perf } from '../perf'
 import { RANGE } from '../ballistics'
 
@@ -138,6 +139,8 @@ export const CameraRig = () => {
     }
     const dt = Math.min(dtRaw, 0.05)
 
+    // a escola de tiro controla a propria camera; na tela de preparacao o voo continua ao fundo
+    if (telemetry.mode === 'train' && train.phase === 'run') return
     if (telemetry.mode !== 'shot') {
       const persp = camera as THREE.PerspectiveCamera
       if (persp.fov !== BASE_FOV) {

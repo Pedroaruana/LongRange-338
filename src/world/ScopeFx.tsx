@@ -5,6 +5,7 @@ import { Effect } from 'postprocessing'
 import { telemetry } from './telemetry'
 import { windStrength } from './wind'
 import { scenario } from './scenarios'
+import { train } from '../train/lessons'
 
 // miragem na luneta: o ar quente perto do chao ondula a imagem; as ondas correm na direcao do vento
 // (e assim que atiradores leem o vento a distancia). sem vento, ela "ferve" para cima.
@@ -45,9 +46,9 @@ export const ScopeFx = () => {
 
   useFrame(({ clock }) => {
     const u = effect.uniforms
-    const inScope = telemetry.mode === 'shot' ? telemetry.scope : 0
+    const inScope = telemetry.mode === 'train' ? (train.phase === 'run' && train.replay === 0 ? 1 : 0) : telemetry.mode === 'shot' ? telemetry.scope : 0
     u.get('uTime')!.value = clock.elapsedTime
-    u.get('uMirage')!.value = inScope * heat()
+    u.get('uMirage')!.value = inScope * heat() * (train.mag / 20)
     u.get('uWind')!.value = windStrength.value
   })
 

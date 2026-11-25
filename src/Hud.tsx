@@ -5,6 +5,8 @@ import { INTRO, SCOPE, FLIGHT, IMPACT, n, type Stage } from './hud/stages'
 import { Chart } from './hud/Chart'
 import { Reticle } from './hud/Reticle'
 import { Home } from './hud/Home'
+import { TrainHud } from './train/TrainHud'
+import { train } from './train/lessons'
 import { applyScenario } from './world/scenarios'
 import { tr } from './i18n'
 import { windStrength } from './world/wind'
@@ -24,7 +26,7 @@ const smooth = (a: number, b: number, x: number) => {
 type Mode = typeof telemetry.mode
 
 export const Hud = ({ mode, onMode, onScenario }: { mode: Mode; onMode: (m: Mode) => void; onScenario: (id: string) => void }) => {
-  // o tiro de 2000 m e a tela inicial sao sempre no deserto
+  // o tiro de 2000 m e a tela inicial sao sempre no deserto; a escola usa o cenario escolhido
   const scenarioTo = (id: string) => {
     applyScenario(id)
     onScenario(id)
@@ -48,9 +50,14 @@ export const Hud = ({ mode, onMode, onScenario }: { mode: Mode; onMode: (m: Mode
       telemetry.s = 0
       telemetry.scope = 0
       telemetry.mode = m
-      windStrength.value = 1
-      setNight(false)
-      scenarioTo('desert')
+      if (m === 'train') {
+        train.phase = 'setup'
+        scenarioTo(train.scenarioId)
+      } else {
+        windStrength.value = 1
+        setNight(false)
+        scenarioTo('desert')
+      }
       onMode(m)
       setTimeout(() => setCurtain(false), 250)
     }, 800)
@@ -73,8 +80,9 @@ export const Hud = ({ mode, onMode, onScenario }: { mode: Mode; onMode: (m: Mode
       </div>
 
       {mode === 'home' && (
-        <Home onShot={() => go('shot')} leaving={curtain} />
+        <Home onShot={() => go('shot')} onTrain={() => go('train')} leaving={curtain} />
       )}
+      {mode === 'train' && <TrainHud onExit={() => go('home')} onScenario={scenarioTo} />}
       {mode === 'shot' && (
       <>
       <Reticle opacity={reticle} />
@@ -148,8 +156,6 @@ export const Hud = ({ mode, onMode, onScenario }: { mode: Mode; onMode: (m: Mode
       )}
 
       <div className={`absolute inset-0 bg-[#0b0a09] transition-opacity duration-700 ${curtain ? 'opacity-100' : 'opacity-0'}`} />
-
-
     </div>
   )
 }

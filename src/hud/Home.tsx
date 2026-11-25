@@ -43,7 +43,7 @@ const Option = ({ n, title, line, onClick }: { n: string; title: string; line: s
   </button>
 )
 
-export const Home = ({ onShot, leaving }: { onShot: () => void; leaving: boolean }) => (
+export const Home = ({ onShot, onTrain, leaving }: { onShot: () => void; onTrain: () => void; leaving: boolean }) => (
   <div className={`absolute inset-0 transition-opacity duration-700 ${leaving ? 'opacity-0' : 'opacity-100'}`}>
     {/* escurece nas pontas do voo, quando a camera recomeca */}
     <div className="absolute inset-0 bg-[#0b0a09]" style={{ opacity: telemetry.homeFade }} />
@@ -80,6 +80,7 @@ export const Home = ({ onShot, leaving }: { onShot: () => void; leaving: boolean
 
       <div className="mt-12 flex flex-wrap justify-center gap-x-10 gap-y-6">
         <Option n="01" title={tr('O TIRO DE 2000 M', 'THE 2000 M SHOT')} line={tr('Role e acompanhe a bala do cano até a placa, com a física de cada trecho.', 'Scroll and follow the bullet from muzzle to plate, with the physics of each leg.')} onClick={onShot} />
+        <Option n="02" title={tr('ESCOLA DE TIRO', 'SNIPER SCHOOL')} line={tr('Aprenda a ler o retículo, medir a distância e segurar queda e vento.', 'Learn to read the reticle, range a target and hold for drop and wind.')} onClick={onTrain} />
       </div>
     </div>
 
