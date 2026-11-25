@@ -43,13 +43,21 @@ const Option = ({ n, title, line, onClick }: { n: string; title: string; line: s
   </button>
 )
 
-export const Home = ({ onShot, onTrain, leaving }: { onShot: () => void; onTrain: () => void; leaving: boolean }) => (
+export const Home = ({ onShot, onTrain, onCalc, onAbout, leaving }: {
+  onShot: () => void; onTrain: () => void; onCalc: () => void; onAbout: () => void; leaving: boolean
+}) => (
   <div className={`absolute inset-0 transition-opacity duration-700 ${leaving ? 'opacity-0' : 'opacity-100'}`}>
     {/* escurece nas pontas do voo, quando a camera recomeca */}
     <div className="absolute inset-0 bg-[#0b0a09]" style={{ opacity: telemetry.homeFade }} />
     <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,.35)_0%,transparent_60%)]" />
 
     <div className="absolute left-[4vw] top-[5vh] font-mono text-[0.62rem] tracking-[0.5em] text-[#ece0cf]/55">{tr('ESTUDO BALÍSTICO', 'BALLISTICS STUDY')}</div>
+    <button
+      onClick={onAbout}
+      className="pointer-events-auto absolute right-[4vw] top-[5vh] cursor-pointer border-b border-[#ece0cf]/30 pb-1 font-mono text-[0.62rem] tracking-[0.4em] text-[#ece0cf]/70 transition-colors hover:text-[#ffd2a6]"
+    >
+      {tr('COMO FOI FEITO', 'HOW IT WAS BUILT')}
+    </button>
 
     <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
       <Mark />
@@ -81,6 +89,7 @@ export const Home = ({ onShot, onTrain, leaving }: { onShot: () => void; onTrain
       <div className="mt-12 flex flex-wrap justify-center gap-x-10 gap-y-6">
         <Option n="01" title={tr('O TIRO DE 2000 M', 'THE 2000 M SHOT')} line={tr('Role e acompanhe a bala do cano até a placa, com a física de cada trecho.', 'Scroll and follow the bullet from muzzle to plate, with the physics of each leg.')} onClick={onShot} />
         <Option n="02" title={tr('ESCOLA DE TIRO', 'SNIPER SCHOOL')} line={tr('Aprenda a ler o retículo, medir a distância e segurar queda e vento.', 'Learn to read the reticle, range a target and hold for drop and wind.')} onClick={onTrain} />
+        <Option n="03" title={tr('CALCULADORA', 'CALCULATOR')} line={tr('Tabela de tiro e curvas de quatro munições, com todos os parâmetros abertos.', 'Dope table and curves for four cartridges, every input exposed.')} onClick={onCalc} />
       </div>
     </div>
 
