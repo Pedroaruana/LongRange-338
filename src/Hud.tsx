@@ -4,8 +4,10 @@ import { P_SHOT, P_IMPACT, P_SCOPE_IN, sample } from './world/layout'
 import { INTRO, SCOPE, FLIGHT, IMPACT, n, type Stage } from './hud/stages'
 import { Chart } from './hud/Chart'
 import { Reticle } from './hud/Reticle'
+import { Home } from './hud/Home'
 import { applyScenario } from './world/scenarios'
 import { tr } from './i18n'
+import { windStrength } from './world/wind'
 
 const pick = (p: number, s: number): Stage => {
   if (p < P_SCOPE_IN) return INTRO
@@ -19,14 +21,40 @@ const smooth = (a: number, b: number, x: number) => {
   return t * t * (3 - 2 * t)
 }
 
-export const Hud = ({ onScenario }: { onScenario: (id: string) => void }) => {
+type Mode = typeof telemetry.mode
+
+export const Hud = ({ mode, onMode, onScenario }: { mode: Mode; onMode: (m: Mode) => void; onScenario: (id: string) => void }) => {
+  // o tiro de 2000 m e a tela inicial sao sempre no deserto
+  const scenarioTo = (id: string) => {
+    applyScenario(id)
+    onScenario(id)
+  }
   const [, setTick] = useState(0)
+  const [curtain, setCurtain] = useState(false)
   const [night, setNight] = useState(false)
 
   useEffect(() => {
     const id = setInterval(() => setTick((t) => t + 1), 70)
     return () => clearInterval(id)
   }, [])
+
+  // escurece, troca de tela com o scroll zerado e clareia de novo
+  const go = (m: Mode) => {
+    if (curtain) return
+    setCurtain(true)
+    setTimeout(() => {
+      scrollTo(0, 0)
+      telemetry.p = 0
+      telemetry.s = 0
+      telemetry.scope = 0
+      telemetry.mode = m
+      windStrength.value = 1
+      setNight(false)
+      scenarioTo('desert')
+      onMode(m)
+      setTimeout(() => setCurtain(false), 250)
+    }, 800)
+  }
 
   const { p, s, scope } = telemetry
   const q = sample(s)
@@ -37,28 +65,35 @@ export const Hud = ({ onScenario }: { onScenario: (id: string) => void }) => {
 
   return (
     <div className="pointer-events-none fixed inset-0 select-none font-mono text-[#ece0cf]">
-      {/* fundo escuro ate a cena 3D ficar pronta */}
+      {/* fundo escuro por tras da tela inicial ate a cena 3D ficar pronta; o logo e as opcoes ja aparecem por cima */}
       <div className={`absolute inset-0 bg-[#0b0a09] transition-opacity duration-[1500ms] ${telemetry.ready ? 'opacity-0' : 'opacity-100'}`}>
         <div className="absolute bottom-[12vh] left-1/2 -translate-x-1/2 animate-pulse font-mono text-[0.6rem] tracking-[0.4em] text-[#e8a76b]/80">
           {tr('PREPARANDO A CENA', 'PREPARING THE SCENE')}
         </div>
       </div>
 
+      {mode === 'home' && (
+        <Home onShot={() => go('shot')} leaving={curtain} />
+      )}
+      {mode === 'shot' && (
+      <>
       <Reticle opacity={reticle} />
 
       <div className="absolute inset-y-0 left-0 w-[48vw] bg-gradient-to-r from-black/60 via-black/25 to-transparent" />
       <div className="absolute left-[4vw] top-[5vh] text-[0.65rem] tracking-[0.55em] text-[#ece0cf]/55">LONGRANGE</div>
-      <div className="pointer-events-auto absolute right-[4vw] top-[5vh] flex gap-6 text-[0.64rem] tracking-[0.35em]">
+      <div data-ui className="pointer-events-auto absolute right-[4vw] top-[5vh] flex gap-6 text-[0.64rem] tracking-[0.35em]">
         <button
           onClick={() => {
             const next = !night
             setNight(next)
-            applyScenario(next ? 'night' : 'desert')
-            onScenario(next ? 'night' : 'desert')
+            scenarioTo(next ? 'night' : 'desert')
           }}
           className="cursor-pointer border-b border-[#ece0cf]/30 pb-1 text-[#ece0cf]/75 transition-colors hover:text-[#ffd2a6]"
         >
           {night ? tr('DIA', 'DAY') : tr('NOITE', 'NIGHT')}
+        </button>
+        <button onClick={() => go('home')} className="cursor-pointer border-b border-[#ece0cf]/30 pb-1 text-[#ece0cf]/75 transition-colors hover:text-[#ffd2a6]">
+          {tr('INÍCIO', 'HOME')}
         </button>
       </div>
 
@@ -109,6 +144,12 @@ export const Hud = ({ onScenario }: { onScenario: (id: string) => void }) => {
           {tr('ROLE PARA DISPARAR', 'SCROLL TO FIRE')}
         </div>
       )}
+      </>
+      )}
+
+      <div className={`absolute inset-0 bg-[#0b0a09] transition-opacity duration-700 ${curtain ? 'opacity-100' : 'opacity-0'}`} />
+
+
     </div>
   )
 }
