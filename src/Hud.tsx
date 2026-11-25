@@ -8,7 +8,9 @@ import { Home } from './hud/Home'
 import { TrainHud } from './train/TrainHud'
 import { train } from './train/lessons'
 import { applyScenario } from './world/scenarios'
-import { tr } from './i18n'
+import { Calc } from './calc/Calc'
+import { About } from './about/About'
+import { lang, setLang, tr } from './i18n'
 import { windStrength } from './world/wind'
 
 const pick = (p: number, s: number): Stage => {
@@ -80,8 +82,10 @@ export const Hud = ({ mode, onMode, onScenario }: { mode: Mode; onMode: (m: Mode
       </div>
 
       {mode === 'home' && (
-        <Home onShot={() => go('shot')} onTrain={() => go('train')} leaving={curtain} />
+        <Home onShot={() => go('shot')} onTrain={() => go('train')} onCalc={() => go('calc')} onAbout={() => go('about')} leaving={curtain} />
       )}
+      {mode === 'calc' && <Calc onExit={() => go('home')} />}
+      {mode === 'about' && <About onExit={() => go('home')} />}
       {mode === 'train' && <TrainHud onExit={() => go('home')} onScenario={scenarioTo} />}
       {mode === 'shot' && (
       <>
@@ -156,6 +160,14 @@ export const Hud = ({ mode, onMode, onScenario }: { mode: Mode; onMode: (m: Mode
       )}
 
       <div className={`absolute inset-0 bg-[#0b0a09] transition-opacity duration-700 ${curtain ? 'opacity-100' : 'opacity-0'}`} />
+
+      {/* idioma em qualquer tela */}
+      <div data-ui className="pointer-events-auto absolute left-1/2 top-[5vh] flex -translate-x-1/2 gap-6 font-mono text-[0.6rem] tracking-[0.35em] text-[#ece0cf]/55">
+        <button onClick={() => setLang(lang.current === 'pt' ? 'en' : 'pt')} className="cursor-pointer transition-colors hover:text-[#ffd2a6]">
+          <span className={lang.current === 'pt' ? 'text-[#ffd2a6]' : ''}>PT</span> / <span className={lang.current === 'en' ? 'text-[#ffd2a6]' : ''}>EN</span>
+        </button>
+      </div>
+
     </div>
   )
 }
