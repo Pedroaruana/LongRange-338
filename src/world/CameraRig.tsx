@@ -8,7 +8,7 @@ import { telemetry } from './telemetry'
 import { heightAt, valleyX } from './height'
 import { train } from '../train/lessons'
 import { perf } from '../perf'
-import { RANGE } from '../ballistics'
+import { RANGE } from '../../shared/ballistics'
 
 // enquadramentos da camera de perseguicao ao longo do voo, no referencial da bala:
 // [distancia (m), atras, lado, cima]

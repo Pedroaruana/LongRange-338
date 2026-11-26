@@ -1,6 +1,6 @@
 import { SOLUTION } from '../world/layout'
 import { telemetry } from '../world/telemetry'
-import { AMMO, RANGE } from '../ballistics'
+import { AMMO, RANGE } from '../../shared/ballistics'
 import { tr, num } from '../i18n'
 
 // tela inicial: o canion passa por baixo enquanto a marca e as opcoes ficam paradas no centro

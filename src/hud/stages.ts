@@ -1,4 +1,4 @@
-import { AMMO, ENV, RANGE, BC_SI, OMEGA_EARTH, cdG7, dragDecel, soundSpeed, type Sample } from '../ballistics'
+import { AMMO, ENV, RANGE, BC_SI, OMEGA_EARTH, cdG7, dragDecel, soundSpeed, type Sample } from '../../shared/ballistics'
 import { SOLUTION, TARGET, MUZZLE } from '../world/layout'
 import { tr, num } from '../i18n'
 

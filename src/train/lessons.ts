@@ -1,5 +1,5 @@
 import { PLATES, MOVER, dope, gun, type Shot } from './engine'
-import { ammoById } from '../ballistics'
+import { ammoById } from '../../shared/ballistics'
 import { tr } from '../i18n'
 import { scopeById, toUnit, unitLabel, clicks, type Scope } from './scopes'
 import { scenario } from '../world/scenarios'

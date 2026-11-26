@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { ENV } from '../ballistics'
+import { ENV } from '../../shared/ballistics'
 
 // um relogio de vento para a cena inteira: capim, arbustos, bandeiras, poeira e nuvens usam o mesmo
 // o vento da simulacao vem da direita (3h) e sopra para -x

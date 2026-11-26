@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { heightAt } from './height'
-import { RANGE, solve, sampleAt, type Sample } from '../ballistics'
+import { RANGE, solve, sampleAt, type Sample } from '../../shared/ballistics'
 import { timed } from '../perf'
 
 // posicoes fixas da cena, em metros reais

@@ -1,5 +1,5 @@
 import { SOLUTION } from '../world/layout'
-import { RANGE } from '../ballistics'
+import { RANGE } from '../../shared/ballistics'
 import { losY, n } from './stages'
 import { tr } from '../i18n'
 

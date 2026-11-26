@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { AMMOS, simulate, spinDrift, airDensity, soundSpeed, type Ammo } from '../ballistics'
+import { AMMOS, simulate, spinDrift, airDensity, soundSpeed, type Ammo } from '../../shared/ballistics'
 import { tr, num } from '../i18n'
 
 // calculadora balistica: o mesmo motor do site, com todos os parametros abertos.
