@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { tr } from '../i18n'
 import { SOLUTION } from '../world/layout'
-import { RANGE } from '../ballistics'
+import { RANGE } from '../../shared/ballistics'
 import { n } from '../hud/stages'
 
 // "como foi feito": as decisoes tecnicas do projeto, para quem quer saber o que tem por baixo

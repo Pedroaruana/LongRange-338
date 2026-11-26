@@ -1,5 +1,5 @@
 import * as THREE from 'three'
-import { simulate, spinDrift as spinFor, AMMO, type Ammo } from '../ballistics'
+import { simulate, spinDrift as spinFor, AMMO, type Ammo } from '../../shared/ballistics'
 import { SCOPE_EYE } from '../world/layout'
 import { heightAt } from '../world/height'
 

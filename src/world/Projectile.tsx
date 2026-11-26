@@ -3,7 +3,7 @@ import * as THREE from 'three'
 import { useFrame } from '@react-three/fiber'
 import { MUZZLE, P_SHOT, P_IMPACT, SOLUTION, bulletWorld, sample } from './layout'
 import { telemetry } from './telemetry'
-import { RANGE } from '../ballistics'
+import { RANGE } from '../../shared/ballistics'
 
 // .338 Lapua 250gr em escala real: 8,6 mm x 41 mm. a camera chega perto o bastante para ela encher a tela
 const L = 0.041

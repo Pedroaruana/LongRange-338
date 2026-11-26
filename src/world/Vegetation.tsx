@@ -7,7 +7,7 @@ import { SHOOTER, MUZZLE } from './layout'
 import { swaying, windTime } from './wind'
 import { TINT } from './atmosphere'
 import { timed } from '../perf'
-import { RANGE } from '../ballistics'
+import { RANGE } from '../../shared/ballistics'
 
 // tudo que ocupa o caminho ate o alvo: rochas, arbustos secos, capim e tumbleweeds rolando com o vento.
 // nada fica a menos de alguns metros da linha do tiro, para nunca cruzar a trajetoria
