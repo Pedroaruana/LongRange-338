@@ -1,0 +1,59 @@
+name: CI
+
+# roda em todo PR e em todo push na main: tipos, testes de unidade, build, template da AWS e testes no navegador
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+# um push novo no mesmo PR cancela a rodada anterior
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    name: tipos, testes, build e cdk synth
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: typecheck
+        run: npx tsc --noEmit -p .
+      - name: testes de unidade
+        run: npm test
+      - name: build
+        run: npm run build
+      - name: template da AWS
+        run: npx cdk synth --quiet
+
+  e2e:
+    name: testes e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - name: navegador do Playwright
+        run: npx playwright install --with-deps chromium
+      - name: testes e2e
+        run: npm run test:e2e
+      - name: relatorio quando falha
+        if: failure()
+        uses: actions/upload-artifact@v5
+        with:
+          name: playwright-traces
+          path: test-results
+          retention-days: 7
