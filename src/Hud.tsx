@@ -141,7 +141,7 @@ export const Hud = ({ mode, onMode, onScenario }: { mode: Mode; onMode: (m: Mode
 
       <div className="absolute bottom-[5vh] right-[4vw] text-right">
         <div className="flex items-baseline justify-end gap-2">
-          <span className="text-[clamp(3rem,8vw,6.5rem)] font-light leading-none tracking-[-0.04em] tabular-nums">{n(s)}</span>
+          <span data-testid="distance" className="text-[clamp(3rem,8vw,6.5rem)] font-light leading-none tracking-[-0.04em] tabular-nums">{n(s)}</span>
           <span className="text-sm text-[#ece0cf]/50">m</span>
         </div>
         <div className="mt-3 flex justify-end gap-6 text-[0.68rem] tracking-[0.25em] text-[#ece0cf]/55 tabular-nums">
