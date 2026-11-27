@@ -1,4 +1,5 @@
 import { Hono } from 'hono'
+import { HTTPException } from 'hono/http-exception'
 import { zValidator } from '@hono/zod-validator'
 import { z } from 'zod'
 import { AMMOS } from '../shared/ballistics'
@@ -69,6 +70,8 @@ export const createApp = (store: RankingStore, now = () => Date.now()) => {
 
   app.notFound((c) => c.json({ error: 'not_found' }, 404))
   app.onError((err, c) => {
+    // erros que o proprio Hono ja classifica (ex.: JSON mal formado = 400) mantem o status
+    if (err instanceof HTTPException && err.status < 500) return c.json({ error: 'bad_request', message: err.message }, err.status)
     console.error(err)
     return c.json({ error: 'internal_error' }, 500)
   })
