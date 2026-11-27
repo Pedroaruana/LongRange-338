@@ -5,3 +5,5 @@ dist
 *.log
 *.tsbuildinfo
 .claude
+test-results
+playwright-report
