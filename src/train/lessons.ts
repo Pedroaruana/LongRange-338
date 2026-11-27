@@ -1,5 +1,6 @@
 import { PLATES, MOVER, dope, gun, type Shot } from './engine'
 import { ammoById } from '../../shared/ballistics'
+import { byRank, type Score } from '../../shared/ranking'
 import { tr } from '../i18n'
 import { scopeById, toUnit, unitLabel, clicks, type Scope } from './scopes'
 import { scenario } from '../world/scenarios'
@@ -287,7 +288,7 @@ const resetShot = () => {
 
 // ---------- ranking da prova, guardado no navegador ----------
 const RANK_KEY = 'longrange.ranking'
-export type Score = { hits: number; shots: number; scenario: string; scope: string; ammo: string; date: number }
+export type { Score }
 
 export const loadRanking = (): Score[] => {
   try {
@@ -299,7 +300,7 @@ export const loadRanking = (): Score[] => {
 }
 
 export const saveScore = (s: Score) => {
-  const r = [...loadRanking(), s].sort((a, b) => b.hits - a.hits || a.date - b.date).slice(0, 10)
+  const r = [...loadRanking(), s].sort(byRank).slice(0, 10)
   try {
     localStorage.setItem(RANK_KEY, JSON.stringify(r))
   } catch {

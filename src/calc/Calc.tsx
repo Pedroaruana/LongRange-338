@@ -1,29 +1,17 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import { AMMOS, simulate, spinDrift, airDensity, soundSpeed, type Ammo } from '../../shared/ballistics'
+import { AMMOS, airDensity, soundSpeed, type Ammo } from '../../shared/ballistics'
+import { dope } from '../../shared/dope'
 import { tr, num } from '../i18n'
 
 // calculadora balistica: o mesmo motor do site, com todos os parametros abertos.
 // gera a tabela de tiro e os graficos de queda e velocidade, e compara as municoes
 
-const SIGHT = 0.075
 const MOA = 0.290888
 
 type Inputs = { ammo: string; range: number; tempC: number; press: number; wind: number; zero: number; unit: 'mrad' | 'moa'; compare: boolean }
 
-const run = (a: Ammo, i: Inputs) => {
-  const air = { tempC: i.tempC, pressHPa: i.press }
-  const opts = (w: boolean) => ({ air, wind: w && i.wind !== 0, windX: -i.wind, coriolis: true, range: i.range, ammo: a })
-  // angulo de zero para a distancia escolhida
-  let e = 0
-  for (let k = 0; k < 10; k++) e -= (simulate(e, 0, { ...opts(false), range: i.zero })[i.zero].y - SIGHT) / i.zero
-  const pts = simulate(e, 0, opts(true))
-  return pts.map((q, s) => ({
-    s, t: q.t, v: q.v, mach: q.mach,
-    drop: SIGHT - q.y, // metros abaixo da linha de visada
-    wind: -(q.x + spinDrift(q.t, a.sg)), // metros para a esquerda (positivo)
-    energy: 0.5 * a.mass * q.v * q.v
-  }))
-}
+const run = (a: Ammo, i: Inputs) =>
+  dope({ ammo: a.id, range: i.range, tempC: i.tempC, pressHPa: i.press, wind: i.wind, zero: i.zero })
 
 const Slider = ({ label, value, min, max, step, unit, onChange }: {
   label: string; value: number; min: number; max: number; step: number; unit: string; onChange: (v: number) => void
