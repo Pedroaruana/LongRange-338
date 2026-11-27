@@ -388,7 +388,7 @@ export const TrainWorld = () => {
         train.saved = true
         saveScore({
           hits: train.hits, shots: train.shots, scenario: scenario.current.name,
-          scope: activeScope().name, ammo: gun.ammo.name, date: Date.now()
+          scope: activeScope().name, ammo: gun.ammo.name
         })
       }
       train.log.unshift({ d: shot.target.d, hit: onTarget, up: shot.up, right: shot.right })
