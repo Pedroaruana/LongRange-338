@@ -1,0 +1,79 @@
+name: Deploy
+
+# publica na AWS depois que o CI passa num push na main (ou manualmente pela aba Actions).
+# fica desligado enquanto a variavel AWS_ROLE_ARN nao existir no repositorio
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  id-token: write # para o GitHub provar quem e para a AWS (OIDC)
+  contents: read
+
+# deploys em fila, nunca dois ao mesmo tempo e nunca cancelando um pela metade
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: deploy na AWS
+    if: >-
+      vars.AWS_ROLE_ARN != '' && (
+        github.event_name == 'workflow_dispatch' ||
+        (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.event == 'push')
+      )
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          # o commit exato que passou no CI
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+
+      - name: credenciais temporarias da AWS
+        uses: aws-actions/configure-aws-credentials@v5
+        with:
+          role-to-assume: ${{ vars.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      # o sitemap precisa do endereco do site; ele so existe depois do primeiro deploy
+      - name: endereco do site, se a stack ja existe
+        id: site
+        run: |
+          url=$(aws cloudformation describe-stacks --stack-name LongRange \
+            --query "Stacks[0].Outputs[?OutputKey=='SiteUrl'].OutputValue" --output text 2>/dev/null || true)
+          [ "$url" = "None" ] && url=""
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+
+      - name: build
+        run: npm run build
+        env:
+          SITE_URL: ${{ steps.site.outputs.url }}
+
+      - name: cdk deploy
+        run: npx cdk deploy LongRange --require-approval never --outputs-file cdk-outputs.json
+
+      - name: primeiro deploy, refaz o build com o sitemap
+        if: steps.site.outputs.url == ''
+        run: |
+          export SITE_URL=$(node -p "require('./cdk-outputs.json').LongRange.SiteUrl")
+          npm run build
+          npx cdk deploy LongRange --require-approval never
+
+      - name: confere o site no ar
+        run: |
+          url=$(node -p "require('./cdk-outputs.json').LongRange.SiteUrl")
+          curl -fsS --retry 6 --retry-delay 10 --retry-all-errors "$url/" -o /dev/null
+          curl -fsS --retry 6 --retry-delay 10 --retry-all-errors "$url/api/health"
+          curl -fsS "$url/robots.txt" | grep -q "Sitemap: $url/sitemap.xml"
+          curl -fsS "$url/llms.txt" -o /dev/null
+          echo "### Site no ar: $url" >> "$GITHUB_STEP_SUMMARY"

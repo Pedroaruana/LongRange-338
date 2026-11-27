@@ -1,0 +1,66 @@
+# acesso do GitHub Actions a conta AWS, sem chave guardada em lugar nenhum.
+# o GitHub prova quem e por OIDC e recebe credenciais temporarias de uma role que:
+# - so aceita a branch main deste repositorio
+# - so pode assumir as roles que o `cdk bootstrap` cria (deploy, upload de arquivos, consultas)
+#   e ler as saidas da stack do site
+# roda uma vez, depois do `cdk bootstrap`, pelo CloudShell (passo a passo no PR do deploy)
+
+AWSTemplateFormatVersion: '2010-09-09'
+Description: LONGRANGE - role do GitHub Actions para deploy via OIDC
+
+Parameters:
+  Repo:
+    Type: String
+    Default: Pedroaruana/LongRange-338
+    Description: repositorio no formato dono/nome
+  Branch:
+    Type: String
+    Default: main
+
+Resources:
+  GithubOidc:
+    Type: AWS::IAM::OIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList:
+        - sts.amazonaws.com
+
+  DeployRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: longrange-github-deploy
+      MaxSessionDuration: 3600
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated:
+                Ref: GithubOidc
+            Action: sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub:
+                  Fn::Sub: repo:${Repo}:ref:refs/heads/${Branch}
+      Policies:
+        - PolicyName: cdk-deploy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: RolesDoCdkBootstrap
+                Effect: Allow
+                Action: sts:AssumeRole
+                Resource:
+                  Fn::Sub: arn:aws:iam::${AWS::AccountId}:role/cdk-hnb659fds-*-${AWS::AccountId}-us-east-1
+              - Sid: SaidasDaStackDoSite
+                Effect: Allow
+                Action: cloudformation:DescribeStacks
+                Resource:
+                  Fn::Sub: arn:aws:cloudformation:us-east-1:${AWS::AccountId}:stack/LongRange/*
+
+Outputs:
+  RoleArn:
+    Description: valor da variavel AWS_ROLE_ARN no GitHub
+    Value:
+      Fn::GetAtt: [DeployRole, Arn]
