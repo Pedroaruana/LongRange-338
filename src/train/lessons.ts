@@ -1,6 +1,7 @@
 import { PLATES, MOVER, dope, gun, type Shot } from './engine'
 import { ammoById } from '../../shared/ballistics'
-import { byRank, type Score } from '../../shared/ranking'
+import { byRank, type Score, type ScoreInput } from '../../shared/ranking'
+import { api } from '../api'
 import { tr } from '../i18n'
 import { scopeById, toUnit, unitLabel, clicks, type Scope } from './scopes'
 import { scenario } from '../world/scenarios'
@@ -286,11 +287,11 @@ const resetShot = () => {
   train.dialWind = 0
 }
 
-// ---------- ranking da prova, guardado no navegador ----------
+// ---------- ranking da prova: global pela API, com copia no navegador para quando ela estiver fora ----------
 const RANK_KEY = 'longrange.ranking'
 export type { Score }
 
-export const loadRanking = (): Score[] => {
+const loadLocal = (): Score[] => {
   try {
     const raw = JSON.parse(localStorage.getItem(RANK_KEY) ?? '[]')
     return Array.isArray(raw) ? raw : []
@@ -299,14 +300,30 @@ export const loadRanking = (): Score[] => {
   }
 }
 
-export const saveScore = (s: Score) => {
-  const r = [...loadRanking(), s].sort(byRank).slice(0, 10)
+// o painel le daqui a cada redesenho; global diz se a lista veio da API ou do navegador
+export const ranking = { list: loadLocal(), global: false }
+
+export const refreshRanking = async () => {
   try {
-    localStorage.setItem(RANK_KEY, JSON.stringify(r))
+    ranking.list = (await api.ranking(10)).ranking
+    ranking.global = true
   } catch {
-    // armazenamento cheio ou bloqueado: o ranking so nao persiste
+    ranking.list = loadLocal()
+    ranking.global = false
   }
-  return r
+}
+
+export const saveScore = (s: ScoreInput) => {
+  const local = [...loadLocal(), { ...s, date: Date.now() }].sort(byRank).slice(0, 10)
+  try {
+    localStorage.setItem(RANK_KEY, JSON.stringify(local))
+  } catch {
+    // armazenamento cheio ou bloqueado: a copia local so nao persiste
+  }
+  ranking.list = local
+  ranking.global = false
+  // manda para o ranking global e recarrega; se a API falhar fica a lista local
+  api.addScore(s).then(refreshRanking, () => {})
 }
 
 export const startLesson = (i: number) => {

@@ -1,4 +1,5 @@
-import { useMemo, useState, type ReactNode } from 'react'
+import { useEffect, useMemo, useState, type ReactNode } from 'react'
+import { api, type SolveRow } from '../api'
 import { AMMOS, airDensity, soundSpeed, type Ammo } from '../../shared/ballistics'
 import { dope } from '../../shared/dope'
 import { tr, num } from '../i18n'
@@ -88,6 +89,21 @@ export const Calc = ({ onExit }: { onExit: () => void }) => {
     [i.range, i.tempC, i.press, i.wind, i.zero] // a unidade e a municao em destaque nao mudam a fisica
   )
   const main = results.find((r) => r.a.id === i.ammo)!
+
+  // a tabela vem da API (o mesmo motor rodando no servidor); os graficos precisam de um ponto
+  // por metro e continuam locais. sem API, a tabela tambem e calculada no navegador
+  const [remote, setRemote] = useState<SolveRow[] | null>(null)
+  useEffect(() => {
+    let alive = true
+    const t = setTimeout(() => {
+      api.solve({ ammo: i.ammo, range: i.range, tempC: i.tempC, pressHPa: i.press, wind: i.wind, zero: i.zero, step: 100 })
+        .then((r) => { if (alive) setRemote(r.table) }, () => { if (alive) setRemote(null) })
+    }, 250)
+    return () => { alive = false; clearTimeout(t) }
+  }, [i.ammo, i.range, i.tempC, i.press, i.wind, i.zero])
+  const table: SolveRow[] = remote ?? main.rows
+    .filter((q) => q.s > 0 && q.s % 100 === 0)
+    .map((q) => ({ range: q.s, time: q.t, velocity: q.v, mach: q.mach, energy: q.energy, drop: q.drop, windage: q.wind }))
   const shown = i.compare ? results : [main]
   const toU = (mrad: number) => (i.unit === 'moa' ? mrad / MOA : mrad)
   const click = i.unit === 'moa' ? 0.25 : 0.1
@@ -184,27 +200,32 @@ export const Calc = ({ onExit }: { onExit: () => void }) => {
                   </tr>
                 </thead>
                 <tbody>
-                  {main.rows.filter((q) => q.s > 0 && q.s % 100 === 0).map((q) => {
-                    const dm = (q.drop / q.s) * 1000
-                    const wm = (q.wind / q.s) * 1000
+                  {table.map((q) => {
+                    const dm = (q.drop / q.range) * 1000
+                    const wm = (q.windage / q.range) * 1000
                     return (
-                      <tr key={q.s} className={`border-t border-[#ece0cf]/8 ${q.mach < 1 ? 'text-[#8fc7e8]' : 'text-[#ece0cf]/85'}`}>
-                        <td className="py-1.5 pr-4 text-[#ffd2a6]">{q.s}</td>
+                      <tr key={q.range} className={`border-t border-[#ece0cf]/8 ${q.mach < 1 ? 'text-[#8fc7e8]' : 'text-[#ece0cf]/85'}`}>
+                        <td className="py-1.5 pr-4 text-[#ffd2a6]">{q.range}</td>
                         <td className="pr-4">{num(q.drop, 2)}</td>
                         <td className="pr-4">{num(toU(dm), 1)}</td>
                         <td className="pr-4">{Math.round(toU(dm) / click)}</td>
-                        <td className="pr-4">{num(q.wind, 2)}</td>
+                        <td className="pr-4">{num(q.windage, 2)}</td>
                         <td className="pr-4">{num(toU(wm), 1)}</td>
-                        <td className="pr-4">{num(q.v)}</td>
+                        <td className="pr-4">{num(q.velocity)}</td>
                         <td className="pr-4">{num(q.mach, 2)}</td>
                         <td className="pr-4">{num(q.energy)}</td>
-                        <td>{num(q.t, 2)}</td>
+                        <td>{num(q.time, 2)}</td>
                       </tr>
                     )
                   })}
                 </tbody>
               </table>
-              <div className="mt-2 font-mono text-[0.6rem] text-[#8fc7e8]/70">{tr('em azul: bala subsônica', 'in blue: subsonic bullet')}</div>
+              <div className="mt-2 flex flex-wrap justify-between gap-2 font-mono text-[0.6rem]">
+                <span className="text-[#8fc7e8]/70">{tr('em azul: bala subsônica', 'in blue: subsonic bullet')}</span>
+                <span className="text-[#ece0cf]/45">
+                  {remote ? tr('tabela calculada pela API · POST /api/solve', 'table computed by the API · POST /api/solve') : tr('API fora do ar: tabela calculada no navegador', 'API offline: table computed in the browser')}
+                </span>
+              </div>
             </div>
           </div>
         </div>

@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react'
-import { train, LESSONS, startLesson, startFree, hitTarget, activeScope, air, dopeTable, windFromScenario, loadRanking } from './lessons'
+import { useEffect, type ReactNode } from 'react'
+import { train, LESSONS, startLesson, startFree, hitTarget, activeScope, air, dopeTable, windFromScenario, ranking, refreshRanking } from './lessons'
 import { AMMOS } from '../../shared/ballistics'
 import { gun } from './engine'
 import { PLATES, MOVER } from './engine'
@@ -55,7 +55,8 @@ const fmt = (mrad: number) => {
 // ---------- preparacao ----------
 const Setup = ({ onScenario, onExit }: { onScenario: (id: string) => void; onExit: () => void }) => {
   const lessons = train.mode === 'lessons'
-  const ranking = loadRanking()
+  // busca o ranking global ao abrir a preparacao
+  useEffect(() => { void refreshRanking() }, [])
   return (
     <div className="absolute inset-0 overflow-y-auto bg-black/55">
       <div data-ui className="pointer-events-auto mx-auto max-w-[68rem] px-[4vw] py-[7vh]">
@@ -89,10 +90,10 @@ const Setup = ({ onScenario, onExit }: { onScenario: (id: string) => void; onExi
               </Pick>
             ))}
 
-            {ranking.length > 0 && (
+            {ranking.list.length > 0 && (
               <div className="mt-8">
-                <Head>{tr('RANKING DA PROVA', 'TEST LEADERBOARD')}</Head>
-                {ranking.slice(0, 5).map((r, i) => (
+                <Head>{tr('RANKING DA PROVA', 'TEST LEADERBOARD')} · {ranking.global ? 'GLOBAL' : tr('NESTE NAVEGADOR', 'THIS BROWSER')}</Head>
+                {ranking.list.slice(0, 5).map((r, i) => (
                   <div key={r.date} className="flex justify-between border-t border-[#ece0cf]/10 py-1.5 text-[0.66rem] tabular-nums">
                     <span className="text-[#ece0cf]/45">{i + 1}.</span>
                     <span className="text-[#ffd2a6]">{r.hits}/{r.shots}</span>
@@ -248,8 +249,8 @@ const LessonPanel = () => {
         <div className="mt-4 text-[0.86rem] leading-6 text-[#ffd2a6]">
           {tr('Resultado', 'Result')}: {train.hits} {tr('de', 'of')} {l.shots} {tr('placas', 'plates')}.{' '}
           {train.hits >= 4 ? tr('Pronto para os 2000 m.', 'Ready for 2000 m.') : train.hits >= 2 ? tr('Bom começo. Atenção às rajadas.', 'Good start. Mind the gusts.') : tr('Volte às lições 03 a 05.', 'Go back to lessons 03 to 05.')}
-          <div className="mt-3 font-mono text-[0.58rem] tracking-[0.35em] text-[#ece0cf]/45">RANKING</div>
-          {loadRanking().slice(0, 5).map((r, i) => (
+          <div className="mt-3 font-mono text-[0.58rem] tracking-[0.35em] text-[#ece0cf]/45">RANKING · {ranking.global ? 'GLOBAL' : tr('NESTE NAVEGADOR', 'THIS BROWSER')}</div>
+          {ranking.list.slice(0, 5).map((r, i) => (
             <div key={r.date} className="flex gap-4 font-mono text-[0.68rem] tabular-nums text-[#ece0cf]/75">
               <span>{i + 1}.</span><span className="text-[#ffd2a6]">{r.hits}/{r.shots}</span><span>{r.scenario}</span><span className="text-[#ece0cf]/45">{r.ammo}</span>
             </div>
