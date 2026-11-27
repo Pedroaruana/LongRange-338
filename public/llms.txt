@@ -1,0 +1,40 @@
+# LONGRANGE
+
+> Simulacao balistica em 3D de um tiro de .338 Lapua Magnum a 2000 m, feita no navegador com React e Three.js. Tudo e calculado em tempo real por um motor balistico proprio: arrasto G7, densidade do ar, vento, efeito Coriolis e spin drift. O site tem tres partes: o tiro de 2000 m explicado etapa por etapa, uma escola de tiro com lunetas e municoes reais, e uma calculadora balistica. Existe tambem uma API publica com o mesmo motor.
+
+O site esta em portugues e ingles (botao PT / EN). A cena 3D e gerada por codigo; o unico modelo externo e o soldado, dos exemplos oficiais do three.js (personagem do Mixamo).
+
+## O que tem no site
+
+- O tiro de 2000 m: rolando a pagina, a camera sai do atirador, entra na luneta e acompanha a bala ate a placa de aco. Cada trecho mostra a formula com os numeros do momento: gravidade, vento, densidade do ar, barreira do som, spin drift, Coriolis e impacto
+- Escola de tiro: 7 licoes guiadas (miliradiano, medir distancia, segurar a queda, ler o vento, girar a torre, alvo em movimento e prova) e treino livre, com 5 cenarios, 4 lunetas (FFP e SFP, mrad e MOA) e 4 municoes. Precisa de mouse e teclado
+- Calculadora balistica: tabela de tiro e curvas de queda e velocidade para .338 Lapua Magnum, .308 Winchester, 6.5 Creedmoor e .50 BMG
+
+## Fisica
+
+- Modelo de massa pontual com tabela de arrasto G7 e coeficiente balistico publicado pelo fabricante
+- Integracao Runge-Kutta de segunda ordem em passos de 0,4 ms
+- Densidade do ar pela lei dos gases ideais; velocidade do som pela temperatura
+- Vento lateral com a deriva conferida contra a regra de Didion
+- Coriolis pelo produto vetorial com a rotacao da Terra na latitude 36 N
+- Spin drift pela formula empirica de Bryan Litz
+
+## API
+
+Base: `/api` no mesmo endereco do site. Respostas em JSON. Entrada invalida responde 400 com `{ "error": "invalid_input", "issues": [{ "path", "message" }] }`.
+
+- `POST /api/solve`: tabela de tiro. Corpo: `ammo` ("338", "308", "65" ou "50"), `range` (100 a 2500 m), `tempC` (-30 a 50), `pressHPa` (600 a 1100), `wind` (m/s, positivo vindo da direita, -20 a 20), `zero` (50 a 300 m), `step` (opcional, 10 a 500, padrao 100). Devolve `table` com `range`, `time`, `velocity`, `mach`, `energy`, `drop`, `windage`, `dropMrad` e `windageMrad`
+- `GET /api/ranking?limit=10`: melhores resultados da prova da escola de tiro
+- `POST /api/ranking`: grava um resultado com `hits`, `shots`, `scenario`, `scope` e `ammo`
+- `GET /api/health`: checagem simples
+
+Exemplo:
+
+```
+POST /api/solve
+{ "ammo": "338", "range": 1000, "tempC": 15, "pressHPa": 1013, "wind": 5, "zero": 100 }
+```
+
+## Codigo
+
+- [Repositorio no GitHub](https://github.com/Pedroaruana/LongRange-338): React 19, Vite, TypeScript, Three.js, React Three Fiber, Tailwind, Hono, Zod, Vitest e Playwright
