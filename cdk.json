@@ -1,0 +1,12 @@
+{
+  "app": "npx tsx infra/app.ts",
+  "output": "cdk.out",
+  "watch": {
+    "include": ["infra/**"]
+  },
+  "context": {
+    "@aws-cdk/core:checkSecretUsage": true,
+    "@aws-cdk/aws-iam:minimizePolicies": true,
+    "@aws-cdk/aws-s3:createDefaultLoggingPolicy": true
+  }
+}
